@@ -36,14 +36,12 @@ td_top_5_means = td_top_5.reset_index()[td_top_5.reset_index()["level_1"]=="mean
 # plt.show()
 
 # Boxplot comparing players by category
-leaders_pts = td.groupby("player",as_index=True,sort=False).apply(lambda x: x)["PTS"]
-print(leaders_pts.T)
-# leaders_pts = None
-# sns.catplot(leaders_pts,kind="box")
+# g = sns.FacetGrid()
+# sns.catplot(data=td_leaders,x="player",y="PTS",hue="player",kind="box")
 # plt.show()
 
-# TODO: Comperative Boxplots
-# g = sns.FacetGrid(td_leaders)
-# g.map(sns.boxplot,"player","PTS")
-# g.add_legend()
-# plt.show
+# Boxplot comparing players along all categories
+# Need to transform wide into long format
+td_leaders_long = td_leaders.melt(id_vars=["player"],var_name="stat")
+sns.catplot(td_leaders_long,x="player",hue="player",y="value",kind="box",col="stat",col_wrap=3,legend=True,palette="hls").set(xticklabels=[])
+plt.show()
