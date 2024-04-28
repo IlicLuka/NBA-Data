@@ -7,21 +7,44 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
 
-df = pd.read_csv("C:\\Users\\lukvi\\Python Fun\\Data Visualisation\\NBA Data\\triple_doubles.csv")
-df["season"] = df["season"].astype("string").transform(lambda x: x[-2:])
-df_stats = df[["MIN","PTS","REB","AST","STL","BLK"]]
-# print(df.head())
+# Loading the data
+td = pd.read_csv("C:\\Users\\lukvi\\Python Fun\\NBA-Data\\triple_doubles.csv") 
+# Simplify Player names and seasoon name. Beware that player names could lead to unclerity, and seasons like this when ordered get mismatched
+td["season"] = td["season"].astype("string").transform(lambda x: x[-2:])
+td["player"] = td["player"].astype("string").transform(lambda x: x.partition(" ")[2])
 
-# TD leaders
-df_counts = df.groupby("player",as_index=False).apply(lambda x: x)["player"].value_counts()
-#df_leaders = df.loc[df_counts[0,:5]]
-print(df_counts.head())
+# The leaders' TDs
+num_leaders = 8
+td_counts = td["player"].value_counts()
+td_leaders = td.groupby("player",as_index=True,sort=False).apply(lambda x: x)[["MIN","PTS","REB","AST","STL","BLK"]]
+td_leaders = td_leaders.loc[td_counts.index[0:num_leaders].to_list()]
+td_leaders = td_leaders.reset_index().drop("level_1",axis=1)
 
-df_print = df.groupby("season",as_index=True,sort=False).apply(lambda x: x.count())
-df_stats_print = df.groupby("player",as_index=True,sort=False).apply(lambda x: x.describe())[["MIN","PTS","REB","AST","STL","BLK"]]
-# df_stats_leaders_summary = df_leaders.groupby("player",as_index=True,sort=False).apply(lambda x: x.describe())[["MIN","PTS","REB","AST","STL","BLK"]]
-print(df_stats_print)
+# TD stats for all TDs
+td_stats = td.groupby("player",as_index=True,sort=False).apply(lambda x: x.describe())[["MIN","PTS","REB","AST","STL","BLK"]]
+td_means = td_stats.reset_index()[td_stats.reset_index()["level_1"] == "mean"]
 
-# sns.pairplot(df_stats)
+# TD leaders' means
+td_top_5 = td_stats.loc[td_counts.index[0:num_leaders].to_list()]
+td_top_5_means = td_top_5.reset_index()[td_top_5.reset_index()["level_1"]=="mean"]
+
+
+# Boxplots comparing the means of all players TD stats
+# sns.catplot(td_means,kind="box")
 # plt.show()
 
+# Boxplots comparing stats by person
+# westbrook_td = td_leaders[td_leaders["player"]=="Russell Westbrook"]
+# sns.catplot(westbrook_td,kind="violin")
+# plt.show()
+
+# Boxplot comparing players by category
+# g = sns.FacetGrid()
+# sns.catplot(data=td_leaders,x="player",y="PTS",hue="player",kind="box")
+# plt.show()
+
+# Boxplot comparing players along all categories
+# Need to transform wide into long format
+td_leaders_long = td_leaders.melt(id_vars=["player"],var_name="stat")
+sns.catplot(td_leaders_long,x="player",hue="player",y="value",kind="box",col="stat",col_wrap=3,legend=True,palette="hls").set(xticklabels=[])
+plt.show()
